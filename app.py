@@ -10,7 +10,6 @@ app = Flask(__name__)
 def home():
     result = ""
     insight = ""
-    chart_script = ""
     health_block = ""
     projection_block = ""
     goal_block = ""
@@ -98,7 +97,7 @@ def home():
         <div>{label}</div>
         """
 
-        # 🔥 FUTURE PROJECTION
+        # 🔥 PROJECTION
         r = 0.07
         years_5 = total_value * ((1 + r) ** 5)
         years_10 = total_value * ((1 + r) ** 10)
@@ -116,7 +115,7 @@ def home():
         except:
             goal_block = "<h3>🎯 Goal</h3>Set a goal"
 
-        # 🔥 MONTHLY INVESTING (€500 default)
+        # 🔥 MONTHLY
         monthly = 500
         months = 60
         future_monthly = monthly * (((1 + r/12) ** months - 1) / (r/12))
@@ -126,8 +125,8 @@ def home():
         5Y: €{future_monthly:,.0f}
         """
 
-        # 🔥 DAILY CHANGE (simple estimate)
-        daily_change = total_value * 0.01  # 1% move estimate
+        # 🔥 DAILY
+        daily_change = total_value * 0.01
 
         daily_block = f"""
         <h3>📅 Daily</h3>
@@ -147,23 +146,8 @@ def home():
         if crypto_percent > 50:
             insight = "⚠️ Crypto heavy"
 
-        chart_script = f"""
-        <script>
-        new Chart(document.getElementById('chart'), {{
-            type: 'pie',
-            data: {{
-                labels: ['BTC','ETH','VWCE'],
-                datasets: [{{
-                    data: [{btc_percent},{eth_percent},{vwce_percent}],
-                    backgroundColor: ['#f7931a','#627eea','#22c55e']
-                }}]
-            }}
-        }});
-        </script>
-        """
-
         response = make_response(render_page(
-            result, insight, chart_script,
+            result, insight,
             health_block, projection_block,
             goal_block, monthly_block, daily_block,
             btc_amount, eth_amount, vwce_amount,
@@ -179,21 +163,20 @@ def home():
 
         return response
 
-    return render_page(result, insight, chart_script,
+    return render_page(result, insight,
         health_block, projection_block,
         goal_block, monthly_block, daily_block,
         btc_amount, eth_amount, vwce_amount,
         aapl_amount, msft_amount, goal_amount)
 
 
-def render_page(result, insight, chart_script,
+def render_page(result, insight,
     health, projection, goal, monthly, daily,
     btc, eth, vwce, aapl, msft, goal_val):
 
     return f"""
 <html>
 <head>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
 body {{
     background:#0f172a;
@@ -253,12 +236,9 @@ button {{
 {monthly}
 {daily}
 <h3>{insight}</h3>
-<canvas id="chart"></canvas>
 </div>
 
 </div>
-
-{chart_script}
 
 </body>
 </html>
