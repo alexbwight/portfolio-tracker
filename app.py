@@ -1,5 +1,6 @@
 from flask import Flask, request
 import requests
+import yfinance as yf
 
 app = Flask(__name__)
 
@@ -23,7 +24,11 @@ def home():
 
         btc_price = data["bitcoin"]["eur"]
         eth_price = data["ethereum"]["eur"]
-        vwce_price = 100
+        try:
+           vwce = yf.Ticker("VWCE.DE")
+           vwce_price = vwce.history(period="1d")["Close"].iloc[-1]
+        except:
+           vwce_price = 100  # fallback
 
         btc_value = btc_amount * btc_price
         eth_value = eth_amount * eth_price
