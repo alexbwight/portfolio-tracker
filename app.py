@@ -2,6 +2,7 @@ from flask import Flask, request, make_response
 import requests
 import yfinance as yf
 import os
+import math
 
 app = Flask(__name__)
 
@@ -11,28 +12,37 @@ def home():
     insight = ""
     chart_script = ""
     health_block = ""
+    projection_block = ""
+    goal_block = ""
+    monthly_block = ""
+    daily_block = ""
 
-    # defaults (cookies)
+    # cookies
     btc_amount = request.cookies.get("btc", "")
     eth_amount = request.cookies.get("eth", "")
     vwce_amount = request.cookies.get("vwce", "")
     aapl_amount = request.cookies.get("aapl", "")
     msft_amount = request.cookies.get("msft", "")
+    goal_amount = request.cookies.get("goal", "")
 
     btc_percent = eth_percent = vwce_percent = 0
 
     if request.method == "POST":
-        # SAFE INPUT
+        # INPUT
         btc_amount = float(request.form.get("btc") or 0)
         eth_amount = float(request.form.get("eth") or 0)
         vwce_amount = float(request.form.get("vwce") or 0)
         aapl_amount = float(request.form.get("aapl") or 0)
         msft_amount = float(request.form.get("msft") or 0)
+        goal_amount = float(request.form.get("goal") or 100000)
 
         # CRYPTO
         try:
-            url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur"
-            data = requests.get(url, timeout=5).json()
+            data = requests.get(
+                "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur",
+                timeout=5
+            ).json()
+
             btc_price = data.get("bitcoin", {}).get("eur", 60000)
             eth_price = data.get("ethereum", {}).get("eur", 2000)
         except:
@@ -61,7 +71,7 @@ def home():
 
         total_value = btc_value + eth_value + vwce_value + aapl_value + msft_value
 
-        # PERCENTAGES
+        # %
         if total_value > 0:
             btc_percent = (btc_value / total_value) * 100
             eth_percent = (eth_value / total_value) * 100
@@ -69,7 +79,7 @@ def home():
 
         crypto_percent = btc_percent + eth_percent
 
-        # 🔥 HEALTH SCORE LOGIC
+        # 🔥 HEALTH SCORE
         if crypto_percent > 70:
             score = 30
             label = "High Risk"
@@ -84,127 +94,137 @@ def home():
             color = "#22c55e"
 
         health_block = f"""
-        <div style="margin-top:15px;">
-            <h3>📊 Portfolio Health</h3>
-            <div style="font-size:28px; color:{color}; font-weight:bold;">
-                {score}/100
-            </div>
-            <div>{label}</div>
-        </div>
+        <h3>📊 Health: <span style="color:{color}">{score}/100</span></h3>
+        <div>{label}</div>
+        """
+
+        # 🔥 FUTURE PROJECTION
+        r = 0.07
+        years_5 = total_value * ((1 + r) ** 5)
+        years_10 = total_value * ((1 + r) ** 10)
+
+        projection_block = f"""
+        <h3>📈 Projection</h3>
+        5Y: €{years_5:,.0f}<br>
+        10Y: €{years_10:,.0f}
+        """
+
+        # 🔥 GOAL TRACKER
+        try:
+            years_to_goal = math.log(goal_amount / total_value) / math.log(1 + r)
+            goal_block = f"<h3>🎯 Goal</h3>{years_to_goal:.1f} years to €{goal_amount:,.0f}"
+        except:
+            goal_block = "<h3>🎯 Goal</h3>Set a goal"
+
+        # 🔥 MONTHLY INVESTING (€500 default)
+        monthly = 500
+        months = 60
+        future_monthly = monthly * (((1 + r/12) ** months - 1) / (r/12))
+
+        monthly_block = f"""
+        <h3>💸 Monthly (€500)</h3>
+        5Y: €{future_monthly:,.0f}
+        """
+
+        # 🔥 DAILY CHANGE (simple estimate)
+        daily_change = total_value * 0.01  # 1% move estimate
+
+        daily_block = f"""
+        <h3>📅 Daily</h3>
+        ± €{daily_change:,.0f}
         """
 
         # OUTPUT
         result = f"""
-        <h2>💰 Portfolio Overview</h2>
+        <h2>Total: €{total_value:,.0f}</h2>
 
-        <h3>Crypto</h3>
-        BTC: €{btc_value:,.2f} ({btc_percent:.1f}%) <br>
-        ETH: €{eth_value:,.2f} ({eth_percent:.1f}%) <br><br>
-
-        <h3>Stocks</h3>
-        VWCE: €{vwce_value:,.2f} ({vwce_percent:.1f}%) <br>
-        Apple: €{aapl_value:,.2f} <br>
-        Microsoft: €{msft_value:,.2f} <br><br>
-
-        <hr>
-
-        <h2>Total: €{total_value:,.2f}</h2>
+        BTC €{btc_value:,.0f} | ETH €{eth_value:,.0f}<br>
+        VWCE €{vwce_value:,.0f}<br>
+        AAPL €{aapl_value:,.0f} | MSFT €{msft_value:,.0f}
         """
 
-        # INSIGHT
-        if btc_percent > 50:
-            insight = "⚠️ Heavy crypto exposure"
-        elif vwce_percent > 60:
-            insight = "✅ Strong long-term allocation"
-        else:
-            insight = "⚖️ Balanced portfolio"
+        insight = "⚖️ Balanced"
+        if crypto_percent > 50:
+            insight = "⚠️ Crypto heavy"
 
-        # CHART
         chart_script = f"""
         <script>
-        const data = {{
-            labels: ['BTC', 'ETH', 'VWCE'],
-            datasets: [{{
-                data: [{btc_percent}, {eth_percent}, {vwce_percent}],
-                backgroundColor: ['#f7931a', '#627eea', '#22c55e']
-            }}]
-        }};
-
         new Chart(document.getElementById('chart'), {{
             type: 'pie',
-            data: data
+            data: {{
+                labels: ['BTC','ETH','VWCE'],
+                datasets: [{{
+                    data: [{btc_percent},{eth_percent},{vwce_percent}],
+                    backgroundColor: ['#f7931a','#627eea','#22c55e']
+                }}]
+            }}
         }});
         </script>
         """
 
         response = make_response(render_page(
-            result, insight, chart_script, health_block,
+            result, insight, chart_script,
+            health_block, projection_block,
+            goal_block, monthly_block, daily_block,
             btc_amount, eth_amount, vwce_amount,
-            aapl_amount, msft_amount
+            aapl_amount, msft_amount, goal_amount
         ))
 
-        response.set_cookie("btc", str(btc_amount))
-        response.set_cookie("eth", str(eth_amount))
-        response.set_cookie("vwce", str(vwce_amount))
-        response.set_cookie("aapl", str(aapl_amount))
-        response.set_cookie("msft", str(msft_amount))
+        # SAVE
+        for k,v in {
+            "btc":btc_amount,"eth":eth_amount,"vwce":vwce_amount,
+            "aapl":aapl_amount,"msft":msft_amount,"goal":goal_amount
+        }.items():
+            response.set_cookie(k, str(v))
 
         return response
 
-    return render_page(
-        result, insight, chart_script, health_block,
+    return render_page(result, insight, chart_script,
+        health_block, projection_block,
+        goal_block, monthly_block, daily_block,
         btc_amount, eth_amount, vwce_amount,
-        aapl_amount, msft_amount
-    )
+        aapl_amount, msft_amount, goal_amount)
 
 
-def render_page(result, insight, chart_script, health, btc, eth, vwce, aapl, msft):
+def render_page(result, insight, chart_script,
+    health, projection, goal, monthly, daily,
+    btc, eth, vwce, aapl, msft, goal_val):
+
     return f"""
 <html>
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <title>Wealth Dashboard</title>
-
-    <style>
-        body {{
-            font-family: Arial;
-            background: #0f172a;
-            color: white;
-            text-align: center;
-            padding: 40px;
-        }}
-
-        .container {{
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
-        }}
-
-        .card {{
-            background: #1e293b;
-            padding: 25px;
-            border-radius: 16px;
-            width: 320px;
-        }}
-
-        input {{
-            padding: 10px;
-            margin: 6px;
-            width: 200px;
-            border-radius: 8px;
-            border: none;
-        }}
-
-        button {{
-            padding: 12px 20px;
-            background: #22c55e;
-            border: none;
-            color: white;
-            border-radius: 8px;
-            cursor: pointer;
-        }}
-    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {{
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+    text-align:center;
+}}
+.container {{
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+}}
+.card {{
+    background:#1e293b;
+    padding:20px;
+    border-radius:12px;
+    width:300px;
+}}
+input {{
+    margin:5px;
+    padding:8px;
+    border-radius:6px;
+}}
+button {{
+    padding:10px;
+    background:#22c55e;
+    border:none;
+    border-radius:6px;
+}}
+</style>
 </head>
 
 <body>
@@ -215,26 +235,25 @@ def render_page(result, insight, chart_script, health, btc, eth, vwce, aapl, msf
 
 <div class="card">
 <form method="POST">
-    <h3>Crypto</h3>
-    <input name="btc" value="{btc}" placeholder="BTC"><br>
-    <input name="eth" value="{eth}" placeholder="ETH"><br>
-
-    <h3>Stocks</h3>
-    <input name="vwce" value="{vwce}" placeholder="VWCE"><br>
-    <input name="aapl" value="{aapl}" placeholder="Apple"><br>
-    <input name="msft" value="{msft}" placeholder="Microsoft"><br>
-
-    <button type="submit">Calculate</button>
+<input name="btc" value="{btc}" placeholder="BTC"><br>
+<input name="eth" value="{eth}" placeholder="ETH"><br>
+<input name="vwce" value="{vwce}" placeholder="VWCE"><br>
+<input name="aapl" value="{aapl}" placeholder="Apple"><br>
+<input name="msft" value="{msft}" placeholder="Microsoft"><br>
+<input name="goal" value="{goal_val}" placeholder="Goal €"><br>
+<button>Calculate</button>
 </form>
 </div>
 
 <div class="card">
 {result}
-<br>
 {health}
-<br>
+{projection}
+{goal}
+{monthly}
+{daily}
 <h3>{insight}</h3>
-{"<canvas id='chart'></canvas>" if result else ""}
+<canvas id="chart"></canvas>
 </div>
 
 </div>
@@ -244,7 +263,6 @@ def render_page(result, insight, chart_script, health, btc, eth, vwce, aapl, msf
 </body>
 </html>
 """
-
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
