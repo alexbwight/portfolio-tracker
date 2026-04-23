@@ -10,8 +10,9 @@ def home():
     result = ""
     insight = ""
     chart_script = ""
+    health_block = ""
 
-    # defaults (for first load + cookies)
+    # defaults (cookies)
     btc_amount = request.cookies.get("btc", "")
     eth_amount = request.cookies.get("eth", "")
     vwce_amount = request.cookies.get("vwce", "")
@@ -28,18 +29,17 @@ def home():
         aapl_amount = float(request.form.get("aapl") or 0)
         msft_amount = float(request.form.get("msft") or 0)
 
-        # 🔥 CRYPTO API (SAFE)
+        # CRYPTO
         try:
             url = "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur"
             data = requests.get(url, timeout=5).json()
-
             btc_price = data.get("bitcoin", {}).get("eur", 60000)
             eth_price = data.get("ethereum", {}).get("eur", 2000)
         except:
             btc_price = 60000
             eth_price = 2000
 
-        # 🔥 STOCKS
+        # STOCKS
         def get_price(ticker, fallback):
             try:
                 t = yf.Ticker(ticker)
@@ -61,11 +61,37 @@ def home():
 
         total_value = btc_value + eth_value + vwce_value + aapl_value + msft_value
 
-        # PERCENTAGES (only main 3 for chart)
+        # PERCENTAGES
         if total_value > 0:
             btc_percent = (btc_value / total_value) * 100
             eth_percent = (eth_value / total_value) * 100
             vwce_percent = (vwce_value / total_value) * 100
+
+        crypto_percent = btc_percent + eth_percent
+
+        # 🔥 HEALTH SCORE LOGIC
+        if crypto_percent > 70:
+            score = 30
+            label = "High Risk"
+            color = "#ef4444"
+        elif crypto_percent > 40:
+            score = 60
+            label = "Moderate Risk"
+            color = "#f59e0b"
+        else:
+            score = 85
+            label = "Healthy Allocation"
+            color = "#22c55e"
+
+        health_block = f"""
+        <div style="margin-top:15px;">
+            <h3>📊 Portfolio Health</h3>
+            <div style="font-size:28px; color:{color}; font-weight:bold;">
+                {score}/100
+            </div>
+            <div>{label}</div>
+        </div>
+        """
 
         # OUTPUT
         result = f"""
@@ -111,9 +137,8 @@ def home():
         </script>
         """
 
-        # SAVE COOKIES
         response = make_response(render_page(
-            result, insight, chart_script,
+            result, insight, chart_script, health_block,
             btc_amount, eth_amount, vwce_amount,
             aapl_amount, msft_amount
         ))
@@ -127,13 +152,13 @@ def home():
         return response
 
     return render_page(
-        result, insight, chart_script,
+        result, insight, chart_script, health_block,
         btc_amount, eth_amount, vwce_amount,
         aapl_amount, msft_amount
     )
 
 
-def render_page(result, insight, chart_script, btc, eth, vwce, aapl, msft):
+def render_page(result, insight, chart_script, health, btc, eth, vwce, aapl, msft):
     return f"""
 <html>
 <head>
@@ -147,10 +172,6 @@ def render_page(result, insight, chart_script, btc, eth, vwce, aapl, msft):
             color: white;
             text-align: center;
             padding: 40px;
-        }}
-
-        h1 {{
-            font-size: 34px;
         }}
 
         .container {{
@@ -183,10 +204,6 @@ def render_page(result, insight, chart_script, btc, eth, vwce, aapl, msft):
             border-radius: 8px;
             cursor: pointer;
         }}
-
-        hr {{
-            border: 1px solid #334155;
-        }}
     </style>
 </head>
 
@@ -213,7 +230,9 @@ def render_page(result, insight, chart_script, btc, eth, vwce, aapl, msft):
 
 <div class="card">
 {result}
-<br><br>
+<br>
+{health}
+<br>
 <h3>{insight}</h3>
 {"<canvas id='chart'></canvas>" if result else ""}
 </div>
