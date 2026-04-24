@@ -235,7 +235,13 @@ body {{
 .subtitle {{
     color: #94a3b8;
     margin-top: -10px;
+    margin-bottom: 12px;
+}}
+
+.demo {{
+    color: #94a3b8;
     margin-bottom: 30px;
+    font-size: 14px;
 }}
 
 .container {{
@@ -251,6 +257,16 @@ body {{
     border-radius: 14px;
     width: 320px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}}
+
+.help {{
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.4;
+    background: #0f172a;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 15px;
 }}
 
 input {{
@@ -287,6 +303,17 @@ small {{
     padding: 12px;
     border-radius: 10px;
 }}
+
+.feedback {{
+    margin-top: 30px;
+    color: #94a3b8;
+}}
+
+.feedback a {{
+    color: #22c55e;
+    text-decoration: none;
+    font-weight: bold;
+}}
 </style>
 </head>
 
@@ -294,10 +321,16 @@ small {{
 
 <h1>📊 Wealth Dashboard</h1>
 <p class="subtitle">No login. No account linking. Quick portfolio insights.</p>
+<p class="demo">Try example: 0.01 BTC, 0.5 ETH, 10 VWCE, 1 Apple, 1 Microsoft</p>
 
 <div class="container">
 
 <div class="card">
+<p class="help">
+Enter the amount of each asset you own, not the euro value.<br>
+Example: 0.01 BTC, 0.5 ETH, 10 VWCE shares.
+</p>
+
 <form method="POST">
 <h3>Crypto</h3>
 <input name="btc" value="{btc}" placeholder="BTC amount"><br>
@@ -329,6 +362,13 @@ small {{
 </div>
 </div>
 
+</div>
+
+<div class="feedback">
+    <p>Found something confusing?</p>
+    <a href="mailto:alexbwight@gmail.com?subject=Wealth Dashboard Feedback">
+        Send feedback
+    </a>
 </div>
 
 </body>
