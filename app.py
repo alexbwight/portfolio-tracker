@@ -219,6 +219,35 @@ def render_page(result, insight,
     health, projection, goal, monthly, daily,
     btc, eth, vwce, aapl, msft, goal_val):
 
+    if result:
+        metrics_html = f"""
+            <div class="quick-stats">
+                <div class="stat-card">{health}</div>
+                <div class="stat-card">{projection}</div>
+                <div class="stat-card">{goal}</div>
+                <div class="stat-card">{monthly}</div>
+            </div>
+
+            <div class="wide-card">
+                {daily}
+            </div>
+
+            <div class="insights-card">
+                <h3>⚡ Quick Insights</h3>
+                <div class="insights">
+                    {insight}
+                </div>
+            </div>
+        """
+    else:
+        result = """
+            <div class="empty-state">
+                <h2>Your overview will appear here</h2>
+                <p>Enter your assets on the left and calculate your portfolio.</p>
+            </div>
+        """
+        metrics_html = ""
+
     return f"""
 <html>
 <head>
@@ -237,45 +266,128 @@ body {{
     font-family: 'Inter', Arial, sans-serif;
     color: #f8fafc;
     background:
-        radial-gradient(circle at top left, rgba(34,197,94,0.12), transparent 35%),
-        radial-gradient(circle at top right, rgba(59,130,246,0.12), transparent 30%),
-        linear-gradient(180deg, #020617 0%, #0f172a 100%);
+        radial-gradient(circle at top left, rgba(34,197,94,0.12), transparent 28%),
+        radial-gradient(circle at top right, rgba(59,130,246,0.12), transparent 25%),
+        radial-gradient(circle at bottom center, rgba(168,85,247,0.10), transparent 30%),
+        linear-gradient(180deg, #07111f 0%, #0b1220 100%);
     min-height: 100vh;
-    padding: 32px 20px 50px;
+    padding: 28px 16px 48px;
 }}
 
 .page {{
-    max-width: 1120px;
+    max-width: 1180px;
     margin: 0 auto;
 }}
 
-.hero {{
-    text-align: center;
-    margin-bottom: 28px;
+.topbar {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
 }}
 
-.hero h1 {{
+.brand {{
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}}
+
+.logo {{
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+    box-shadow: 0 12px 24px rgba(34,197,94,0.25);
+}}
+
+.brand-text {{
+    text-align: left;
+}}
+
+.brand-text h1 {{
     margin: 0;
-    font-size: 42px;
+    font-size: 30px;
     font-weight: 800;
     letter-spacing: -0.04em;
 }}
 
-.subtitle {{
+.brand-text p {{
+    margin: 4px 0 0;
     color: #94a3b8;
-    margin: 12px 0 8px;
-    font-size: 16px;
+    font-size: 14px;
 }}
 
-.demo {{
-    display: inline-block;
-    margin-top: 10px;
-    color: #cbd5e1;
-    font-size: 13px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.08);
+.top-pill {{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(148,163,184,0.14);
+    color: #dbeafe;
     padding: 10px 14px;
     border-radius: 999px;
+    font-size: 13px;
+}}
+
+.hero {{
+    margin-bottom: 22px;
+}}
+
+.hero-card {{
+    background: linear-gradient(135deg, rgba(15,23,42,0.82) 0%, rgba(30,41,59,0.72) 100%);
+    border: 1px solid rgba(148,163,184,0.16);
+    border-radius: 26px;
+    padding: 26px;
+    box-shadow:
+        0 24px 60px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}}
+
+.hero-title {{
+    margin: 0;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.1;
+}}
+
+.hero-gradient {{
+    background: linear-gradient(135deg, #86efac 0%, #60a5fa 55%, #c084fc 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}}
+
+.hero-subtitle {{
+    margin: 12px 0 0;
+    color: #94a3b8;
+    font-size: 15px;
+    line-height: 1.6;
+    max-width: 720px;
+}}
+
+.hero-row {{
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}}
+
+.hero-chip {{
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(148,163,184,0.12);
+    border-radius: 999px;
+    padding: 10px 14px;
+    color: #cbd5e1;
+    font-size: 13px;
 }}
 
 .layout {{
@@ -286,54 +398,78 @@ body {{
 }}
 
 .card {{
-    background: rgba(15, 23, 42, 0.72);
+    background: rgba(15, 23, 42, 0.74);
     border: 1px solid rgba(148,163,184,0.16);
-    border-radius: 22px;
+    border-radius: 24px;
     padding: 24px;
     box-shadow:
-        0 20px 50px rgba(0,0,0,0.38),
-        inset 0 1px 0 rgba(255,255,255,0.04);
+        0 24px 60px rgba(0,0,0,0.35),
+        inset 0 1px 0 rgba(255,255,255,0.05);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
 }}
 
-.form-title {{
-    margin: 0 0 10px;
-    font-size: 21px;
-    font-weight: 800;
+.section-title {{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+    font-size: 20px;
+    font-weight: 700;
     letter-spacing: -0.02em;
+}}
+
+.section-badge {{
+    display: inline-block;
+    margin-bottom: 14px;
+    background: rgba(34,197,94,0.10);
+    border: 1px solid rgba(34,197,94,0.25);
+    color: #bbf7d0;
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
 }}
 
 .help {{
     color: #94a3b8;
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     background: rgba(255,255,255,0.03);
     border: 1px solid rgba(148,163,184,0.10);
     padding: 14px;
-    border-radius: 16px;
+    border-radius: 18px;
     margin: 0 0 18px;
+    text-align: left;
 }}
 
-.section-label {{
+.form-group {{
+    margin-top: 18px;
+}}
+
+.group-label {{
+    display: flex;
+    align-items: center;
+    gap: 8px;
     text-align: left;
     color: #e2e8f0;
     font-weight: 700;
     font-size: 14px;
-    margin: 18px 0 8px;
+    margin-bottom: 10px;
+    letter-spacing: 0.01em;
 }}
 
 input {{
     width: 100%;
     margin: 7px 0;
-    padding: 13px 14px;
-    border-radius: 14px;
-    border: 1px solid rgba(148,163,184,0.18);
+    padding: 14px 15px;
+    border-radius: 16px;
+    border: 1px solid rgba(148,163,184,0.16);
     background: rgba(255,255,255,0.04);
     color: white;
     font-size: 14px;
     outline: none;
-    transition: 0.2s ease;
+    transition: all 0.2s ease;
 }}
 
 input::placeholder {{
@@ -341,115 +477,143 @@ input::placeholder {{
 }}
 
 input:focus {{
-    border-color: rgba(34,197,94,0.75);
-    box-shadow: 0 0 0 4px rgba(34,197,94,0.12);
+    border-color: rgba(96,165,250,0.75);
+    box-shadow: 0 0 0 4px rgba(96,165,250,0.12);
     background: rgba(255,255,255,0.06);
 }}
 
 button {{
     width: 100%;
     margin-top: 16px;
-    padding: 14px 18px;
+    padding: 15px 18px;
     border: none;
-    border-radius: 14px;
+    border-radius: 16px;
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: white;
     font-weight: 800;
     font-size: 15px;
     cursor: pointer;
-    box-shadow: 0 12px 24px rgba(34,197,94,0.22);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 14px 28px rgba(34,197,94,0.24);
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }}
 
 button:hover {{
     transform: translateY(-1px);
-    box-shadow: 0 16px 30px rgba(34,197,94,0.30);
+    box-shadow: 0 18px 34px rgba(34,197,94,0.30);
 }}
 
-.summary-header {{
+button:active {{
+    transform: translateY(0);
+}}
+
+.overview-header {{
     display: flex;
     justify-content: space-between;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 16px;
+    gap: 14px;
     flex-wrap: wrap;
+    margin-bottom: 16px;
 }}
 
-.summary-title {{
+.overview-title {{
+    margin: 0;
     font-size: 24px;
     font-weight: 800;
-    margin: 0;
     letter-spacing: -0.03em;
 }}
 
-.pill {{
-    font-size: 12px;
-    color: #bbf7d0;
-    background: rgba(34,197,94,0.10);
-    border: 1px solid rgba(34,197,94,0.25);
+.overview-pill {{
+    background: rgba(96,165,250,0.10);
+    border: 1px solid rgba(96,165,250,0.24);
+    color: #bfdbfe;
     padding: 8px 12px;
     border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
 }}
 
-.result-block {{
-    text-align: left;
-    line-height: 1.7;
-}}
-
-.result-block h2 {{
-    margin: 0 0 12px;
-    font-size: 34px;
-    letter-spacing: -0.04em;
-}}
-
-.result-block h3 {{
-    margin: 18px 0 8px;
-    font-size: 15px;
-    color: #cbd5e1;
-}}
-
-.metrics {{
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-    margin-top: 18px;
-}}
-
-.metric-card {{
-    background: rgba(255,255,255,0.035);
-    border: 1px solid rgba(148,163,184,0.10);
-    border-radius: 16px;
-    padding: 16px;
-    text-align: left;
-}}
-
-.metric-card h3 {{
-    margin: 0 0 10px;
-    font-size: 14px;
-    color: #cbd5e1;
-}}
-
-.metric-card div {{
-    line-height: 1.6;
-}}
-
-.insight-wrap {{
-    margin-top: 18px;
-    background: rgba(255,255,255,0.035);
+.result-wrap {{
+    background: rgba(255,255,255,0.03);
     border: 1px solid rgba(148,163,184,0.10);
     border-radius: 18px;
     padding: 18px;
     text-align: left;
 }}
 
-.insight-wrap h3 {{
+.result-wrap h2 {{
+    margin: 0 0 12px;
+    font-size: 32px;
+    letter-spacing: -0.04em;
+}}
+
+.result-wrap h3 {{
+    margin: 18px 0 8px;
+    color: #cbd5e1;
+    font-size: 14px;
+}}
+
+.quick-stats {{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}}
+
+.stat-card {{
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(148,163,184,0.10);
+    border-radius: 18px;
+    padding: 16px;
+    text-align: left;
+}}
+
+.stat-card h3 {{
+    margin: 0 0 10px;
+    color: #cbd5e1;
+    font-size: 14px;
+}}
+
+.stat-card div {{
+    line-height: 1.7;
+}}
+
+.wide-card {{
+    margin-top: 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(148,163,184,0.10);
+    border-radius: 18px;
+    padding: 16px;
+    text-align: left;
+}}
+
+.insights-card {{
+    margin-top: 16px;
+    background: linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(59,130,246,0.05) 100%);
+    border: 1px solid rgba(148,163,184,0.12);
+    border-radius: 20px;
+    padding: 18px;
+    text-align: left;
+}}
+
+.insights-card h3 {{
     margin: 0 0 12px;
     font-size: 16px;
 }}
 
 .insights {{
+    line-height: 1.8;
     color: #e2e8f0;
-    line-height: 1.7;
+}}
+
+.empty-state {{
+    text-align: center;
+    color: #94a3b8;
+    padding: 40px 10px;
+}}
+
+.empty-state h2 {{
+    color: #f8fafc;
+    font-size: 24px;
 }}
 
 .feedback {{
@@ -471,45 +635,63 @@ button:hover {{
     text-decoration: underline;
 }}
 
-@media (max-width: 900px) {{
+.footer-note {{
+    margin-top: 10px;
+    font-size: 12px;
+    color: #64748b;
+}}
+
+@media (max-width: 940px) {{
     .layout {{
         grid-template-columns: 1fr;
     }}
 
-    .hero h1 {{
-        font-size: 34px;
+    .hero-title {{
+        font-size: 30px;
     }}
 }}
 
 @media (max-width: 640px) {{
     body {{
-        padding: 22px 14px 40px;
+        padding: 20px 12px 36px;
+    }}
+
+    .topbar {{
+        margin-bottom: 18px;
+    }}
+
+    .brand-text h1 {{
+        font-size: 26px;
+    }}
+
+    .hero-card {{
+        padding: 20px;
+        border-radius: 20px;
+    }}
+
+    .hero-title {{
+        font-size: 26px;
+    }}
+
+    .hero-subtitle {{
+        font-size: 14px;
+    }}
+
+    .hero-chip {{
+        width: 100%;
+        text-align: center;
     }}
 
     .card {{
         padding: 18px;
-        border-radius: 18px;
+        border-radius: 20px;
     }}
 
-    .hero h1 {{
-        font-size: 28px;
-    }}
-
-    .subtitle {{
-        font-size: 14px;
-    }}
-
-    .demo {{
-        font-size: 12px;
-        line-height: 1.4;
-        border-radius: 14px;
-    }}
-
-    .metrics {{
+    .quick-stats {{
         grid-template-columns: 1fr;
     }}
 
-    .result-block h2 {{
+    .result-wrap h2 {{
         font-size: 28px;
     }}
 }}
@@ -519,72 +701,93 @@ button:hover {{
 <body>
 <div class="page">
 
+    <div class="topbar">
+        <div class="brand">
+            <div class="logo">📈</div>
+            <div class="brand-text">
+                <h1>Wealth Dashboard</h1>
+                <p>Simple. Private. Beginner-friendly.</p>
+            </div>
+        </div>
+        <div class="top-pill">🔒 No login • No account linking</div>
+    </div>
+
     <div class="hero">
-        <h1>📊 Wealth Dashboard</h1>
-        <p class="subtitle">No login. No account linking. Quick portfolio insights.</p>
-        <div class="demo">Try example: 0.01 BTC, 0.5 ETH, 10 VWCE, 1 Apple, 1 Microsoft</div>
+        <div class="hero-card">
+            <h2 class="hero-title">
+                Track your wealth with a
+                <span class="hero-gradient">cleaner, smarter overview</span>
+            </h2>
+            <p class="hero-subtitle">
+                Get a fast snapshot of your crypto and stock holdings, portfolio health,
+                future projection, and quick insights — without connecting accounts.
+            </p>
+
+            <div class="hero-row">
+                <div class="hero-chip">⚡ Quick insights</div>
+                <div class="hero-chip">📈 Future projection</div>
+                <div class="hero-chip">🎯 Goal tracking</div>
+                <div class="hero-chip">💸 Monthly investing estimate</div>
+            </div>
+        </div>
     </div>
 
     <div class="layout">
 
         <div class="card">
-            <h2 class="form-title">Your Portfolio</h2>
+            <div class="section-badge">Portfolio Input</div>
+            <h2 class="section-title">🧾 Enter your assets</h2>
 
-            <p class="help">
+            <div class="help">
                 Enter the amount of each asset you own, not the euro value.<br>
-                Example: 0.01 BTC, 0.5 ETH, 10 VWCE shares.
-            </p>
+                Example: <strong>0.01 BTC</strong>, <strong>0.5 ETH</strong>,
+                <strong>10 VWCE</strong>, <strong>1 Apple</strong>, <strong>1 Microsoft</strong>.
+            </div>
 
             <form method="POST">
-                <div class="section-label">Crypto</div>
-                <input name="btc" value="{btc}" placeholder="BTC amount">
-                <input name="eth" value="{eth}" placeholder="ETH amount">
+                <div class="form-group">
+                    <div class="group-label">₿ Crypto</div>
+                    <input name="btc" value="{btc}" placeholder="BTC amount">
+                    <input name="eth" value="{eth}" placeholder="ETH amount">
+                </div>
 
-                <div class="section-label">Stocks</div>
-                <input name="vwce" value="{vwce}" placeholder="VWCE shares">
-                <input name="aapl" value="{aapl}" placeholder="Apple shares">
-                <input name="msft" value="{msft}" placeholder="Microsoft shares">
+                <div class="form-group">
+                    <div class="group-label">📊 Stocks / ETFs</div>
+                    <input name="vwce" value="{vwce}" placeholder="VWCE shares">
+                    <input name="aapl" value="{aapl}" placeholder="Apple shares">
+                    <input name="msft" value="{msft}" placeholder="Microsoft shares">
+                </div>
 
-                <div class="section-label">Goal</div>
-                <input name="goal" value="{goal_val}" placeholder="Goal €">
+                <div class="form-group">
+                    <div class="group-label">🎯 Goal</div>
+                    <input name="goal" value="{goal_val}" placeholder="Goal €">
+                </div>
 
                 <button type="submit">Calculate Portfolio</button>
             </form>
+
+            <div class="footer-note">
+                Example: 0.01 BTC, 0.5 ETH, 10 VWCE, 1 Apple, 1 Microsoft
+            </div>
         </div>
 
         <div class="card">
-            <div class="summary-header">
-                <h2 class="summary-title">Overview</h2>
-                <div class="pill">Privacy-first</div>
+            <div class="overview-header">
+                <h2 class="overview-title">Portfolio Overview</h2>
+                <div class="overview-pill">Live market pricing</div>
             </div>
 
-            <div class="result-block">
+            <div class="result-wrap">
                 {result}
             </div>
 
-            <div class="metrics">
-                <div class="metric-card">{health}</div>
-                <div class="metric-card">{projection}</div>
-                <div class="metric-card">{goal}</div>
-                <div class="metric-card">{monthly}</div>
-            </div>
-
-            <div class="metric-card" style="margin-top: 14px;">
-                {daily}
-            </div>
-
-            <div class="insight-wrap">
-                <h3>⚡ Quick Insights</h3>
-                <div class="insights">
-                    {insight}
-                </div>
-            </div>
+            {metrics_html}
         </div>
 
     </div>
 
     <div class="feedback">
-        <p>Found something confusing?</p>
+        <p>Found something confusing or missing?</p>
         <a href="mailto:alexbwight@gmail.com?subject=Wealth Dashboard Feedback">
             Send feedback
         </a>
