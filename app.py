@@ -1,5 +1,4 @@
 from flask import Flask, request, make_response
-import requests
 import yfinance as yf
 import os
 import math
@@ -43,31 +42,31 @@ def home():
         msft_amount = safe_float(request.form.get("msft") or 0)
         goal_amount = safe_float(request.form.get("goal") or 100000, 100000)
 
-        # CRYPTO PRICES
-        try:
-            data = requests.get(
-                "https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=eur",
-                timeout=5
-            ).json()
-
-            btc_price = data.get("bitcoin", {}).get("eur") or 60000
-            eth_price = data.get("ethereum", {}).get("eur") or 2000
-        except:
-            btc_price = 60000
-            eth_price = 2000
-
-        # STOCK PRICES
+        # PRICE FETCHING
         def get_price(ticker, fallback):
             try:
                 t = yf.Ticker(ticker)
-                hist = t.history(period="1d")
-                return hist["Close"].iloc[-1] if not hist.empty else fallback
+                hist = t.history(period="5d")
+
+                if not hist.empty:
+                    return hist["Close"].iloc[-1]
+                return fallback
             except:
                 return fallback
 
+        # Crypto prices in EUR
+        btc_price = get_price("BTC-EUR", 60000)
+        eth_price = get_price("ETH-EUR", 2000)
+
+        # ETF price in EUR
         vwce_price = get_price("VWCE.DE", 100)
-        aapl_price = get_price("AAPL", 150)
-        msft_price = get_price("MSFT", 300)
+
+        # Convert US stocks from USD to EUR
+        eurusd = get_price("EURUSD=X", 1.08)
+        usd_to_eur = 1 / eurusd if eurusd > 0 else 0.93
+
+        aapl_price = get_price("AAPL", 150) * usd_to_eur
+        msft_price = get_price("MSFT", 300) * usd_to_eur
 
         # VALUES
         btc_value = btc_amount * btc_price
@@ -215,7 +214,8 @@ def home():
     return render_page(
         result, insight,
         health_block, projection_block,
-        goal_block, monthly_block, daily_block,
+        goal_block, monthly_block,
+        daily_block,
         btc_amount, eth_amount, vwce_amount,
         aapl_amount, msft_amount, goal_amount
     )
