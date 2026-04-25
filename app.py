@@ -222,6 +222,7 @@ def render_page(result, insight,
     return f"""
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {{
     background: #0f172a;
@@ -313,6 +314,43 @@ small {{
     color: #22c55e;
     text-decoration: none;
     font-weight: bold;
+}}
+
+@media (max-width: 700px) {{
+    body {{
+        padding: 20px;
+    }}
+
+    h1 {{
+        font-size: 26px;
+    }}
+
+    .subtitle {{
+        font-size: 14px;
+    }}
+
+    .demo {{
+        font-size: 12px;
+    }}
+
+    .container {{
+        flex-direction: column;
+        align-items: center;
+    }}
+
+    .card {{
+        width: 90%;
+        max-width: 360px;
+    }}
+
+    input {{
+        width: 85%;
+        font-size: 14px;
+    }}
+
+    button {{
+        width: 70%;
+    }}
 }}
 </style>
 </head>
