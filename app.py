@@ -98,7 +98,7 @@ def home():
 
         health_block = f"""
         <h3>📊 Portfolio Health</h3>
-        <div style="font-size:30px; color:{color}; font-weight:bold;">
+        <div style="font-size:30px; color:{color}; font-weight:800;">
             {score}/100
         </div>
         <div>{label}</div>
@@ -223,106 +223,276 @@ def render_page(result, insight,
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wealth Dashboard</title>
+
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+* {{
+    box-sizing: border-box;
+}}
+
 body {{
-    background: #0f172a;
-    color: white;
-    font-family: Arial;
-    text-align: center;
     margin: 0;
-    padding: 35px;
+    font-family: 'Inter', Arial, sans-serif;
+    color: #f8fafc;
+    background:
+        radial-gradient(circle at top left, rgba(34,197,94,0.12), transparent 35%),
+        radial-gradient(circle at top right, rgba(59,130,246,0.12), transparent 30%),
+        linear-gradient(180deg, #020617 0%, #0f172a 100%);
+    min-height: 100vh;
+    padding: 32px 20px 50px;
+}}
+
+.page {{
+    max-width: 1120px;
+    margin: 0 auto;
+}}
+
+.hero {{
+    text-align: center;
+    margin-bottom: 28px;
+}}
+
+.hero h1 {{
+    margin: 0;
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -0.04em;
 }}
 
 .subtitle {{
     color: #94a3b8;
-    margin-top: -10px;
-    margin-bottom: 12px;
+    margin: 12px 0 8px;
+    font-size: 16px;
 }}
 
 .demo {{
-    color: #94a3b8;
-    margin-bottom: 30px;
-    font-size: 14px;
+    display: inline-block;
+    margin-top: 10px;
+    color: #cbd5e1;
+    font-size: 13px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    padding: 10px 14px;
+    border-radius: 999px;
 }}
 
-.container {{
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-    flex-wrap: wrap;
+.layout {{
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 22px;
+    align-items: start;
 }}
 
 .card {{
-    background: #1e293b;
-    padding: 22px;
-    border-radius: 14px;
-    width: 320px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid rgba(148,163,184,0.16);
+    border-radius: 22px;
+    padding: 24px;
+    box-shadow:
+        0 20px 50px rgba(0,0,0,0.38),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}}
+
+.form-title {{
+    margin: 0 0 10px;
+    font-size: 21px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }}
 
 .help {{
     color: #94a3b8;
     font-size: 14px;
-    line-height: 1.4;
-    background: #0f172a;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 15px;
+    line-height: 1.5;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(148,163,184,0.10);
+    padding: 14px;
+    border-radius: 16px;
+    margin: 0 0 18px;
+}}
+
+.section-label {{
+    text-align: left;
+    color: #e2e8f0;
+    font-weight: 700;
+    font-size: 14px;
+    margin: 18px 0 8px;
 }}
 
 input {{
-    margin: 6px;
-    padding: 10px;
-    width: 220px;
-    border-radius: 8px;
-    border: none;
+    width: 100%;
+    margin: 7px 0;
+    padding: 13px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(148,163,184,0.18);
+    background: rgba(255,255,255,0.04);
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: 0.2s ease;
+}}
+
+input::placeholder {{
+    color: #94a3b8;
+}}
+
+input:focus {{
+    border-color: rgba(34,197,94,0.75);
+    box-shadow: 0 0 0 4px rgba(34,197,94,0.12);
+    background: rgba(255,255,255,0.06);
 }}
 
 button {{
-    margin-top: 10px;
-    padding: 12px 20px;
-    background: #22c55e;
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px 18px;
     border: none;
-    border-radius: 8px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: white;
-    font-weight: bold;
+    font-weight: 800;
+    font-size: 15px;
     cursor: pointer;
+    box-shadow: 0 12px 24px rgba(34,197,94,0.22);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }}
 
-h3 {{
+button:hover {{
+    transform: translateY(-1px);
+    box-shadow: 0 16px 30px rgba(34,197,94,0.30);
+}}
+
+.summary-header {{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}}
+
+.summary-title {{
+    font-size: 24px;
+    font-weight: 800;
+    margin: 0;
+    letter-spacing: -0.03em;
+}}
+
+.pill {{
+    font-size: 12px;
+    color: #bbf7d0;
+    background: rgba(34,197,94,0.10);
+    border: 1px solid rgba(34,197,94,0.25);
+    padding: 8px 12px;
+    border-radius: 999px;
+}}
+
+.result-block {{
+    text-align: left;
+    line-height: 1.7;
+}}
+
+.result-block h2 {{
+    margin: 0 0 12px;
+    font-size: 34px;
+    letter-spacing: -0.04em;
+}}
+
+.result-block h3 {{
+    margin: 18px 0 8px;
+    font-size: 15px;
     color: #cbd5e1;
 }}
 
-small {{
-    color: #94a3b8;
+.metrics {{
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    margin-top: 18px;
+}}
+
+.metric-card {{
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(148,163,184,0.10);
+    border-radius: 16px;
+    padding: 16px;
+    text-align: left;
+}}
+
+.metric-card h3 {{
+    margin: 0 0 10px;
+    font-size: 14px;
+    color: #cbd5e1;
+}}
+
+.metric-card div {{
+    line-height: 1.6;
+}}
+
+.insight-wrap {{
+    margin-top: 18px;
+    background: rgba(255,255,255,0.035);
+    border: 1px solid rgba(148,163,184,0.10);
+    border-radius: 18px;
+    padding: 18px;
+    text-align: left;
+}}
+
+.insight-wrap h3 {{
+    margin: 0 0 12px;
+    font-size: 16px;
 }}
 
 .insights {{
-    text-align: left;
-    line-height: 1.4;
-    background: #0f172a;
-    padding: 12px;
-    border-radius: 10px;
+    color: #e2e8f0;
+    line-height: 1.7;
 }}
 
 .feedback {{
-    margin-top: 30px;
+    text-align: center;
+    margin-top: 24px;
     color: #94a3b8;
+    font-size: 14px;
 }}
 
 .feedback a {{
-    color: #22c55e;
+    display: inline-block;
+    margin-top: 8px;
+    color: #86efac;
     text-decoration: none;
-    font-weight: bold;
+    font-weight: 700;
 }}
 
-@media (max-width: 700px) {{
-    body {{
-        padding: 20px;
+.feedback a:hover {{
+    text-decoration: underline;
+}}
+
+@media (max-width: 900px) {{
+    .layout {{
+        grid-template-columns: 1fr;
     }}
 
-    h1 {{
-        font-size: 26px;
+    .hero h1 {{
+        font-size: 34px;
+    }}
+}}
+
+@media (max-width: 640px) {{
+    body {{
+        padding: 22px 14px 40px;
+    }}
+
+    .card {{
+        padding: 18px;
+        border-radius: 18px;
+    }}
+
+    .hero h1 {{
+        font-size: 28px;
     }}
 
     .subtitle {{
@@ -331,84 +501,96 @@ small {{
 
     .demo {{
         font-size: 12px;
+        line-height: 1.4;
+        border-radius: 14px;
     }}
 
-    .container {{
-        flex-direction: column;
-        align-items: center;
+    .metrics {{
+        grid-template-columns: 1fr;
     }}
 
-    .card {{
-        width: 90%;
-        max-width: 360px;
-    }}
-
-    input {{
-        width: 85%;
-        font-size: 14px;
-    }}
-
-    button {{
-        width: 70%;
+    .result-block h2 {{
+        font-size: 28px;
     }}
 }}
 </style>
 </head>
 
 <body>
+<div class="page">
 
-<h1>📊 Wealth Dashboard</h1>
-<p class="subtitle">No login. No account linking. Quick portfolio insights.</p>
-<p class="demo">Try example: 0.01 BTC, 0.5 ETH, 10 VWCE, 1 Apple, 1 Microsoft</p>
+    <div class="hero">
+        <h1>📊 Wealth Dashboard</h1>
+        <p class="subtitle">No login. No account linking. Quick portfolio insights.</p>
+        <div class="demo">Try example: 0.01 BTC, 0.5 ETH, 10 VWCE, 1 Apple, 1 Microsoft</div>
+    </div>
 
-<div class="container">
+    <div class="layout">
 
-<div class="card">
-<p class="help">
-Enter the amount of each asset you own, not the euro value.<br>
-Example: 0.01 BTC, 0.5 ETH, 10 VWCE shares.
-</p>
+        <div class="card">
+            <h2 class="form-title">Your Portfolio</h2>
 
-<form method="POST">
-<h3>Crypto</h3>
-<input name="btc" value="{btc}" placeholder="BTC amount"><br>
-<input name="eth" value="{eth}" placeholder="ETH amount"><br>
+            <p class="help">
+                Enter the amount of each asset you own, not the euro value.<br>
+                Example: 0.01 BTC, 0.5 ETH, 10 VWCE shares.
+            </p>
 
-<h3>Stocks</h3>
-<input name="vwce" value="{vwce}" placeholder="VWCE shares"><br>
-<input name="aapl" value="{aapl}" placeholder="Apple shares"><br>
-<input name="msft" value="{msft}" placeholder="Microsoft shares"><br>
+            <form method="POST">
+                <div class="section-label">Crypto</div>
+                <input name="btc" value="{btc}" placeholder="BTC amount">
+                <input name="eth" value="{eth}" placeholder="ETH amount">
 
-<h3>Goal</h3>
-<input name="goal" value="{goal_val}" placeholder="Goal €"><br>
+                <div class="section-label">Stocks</div>
+                <input name="vwce" value="{vwce}" placeholder="VWCE shares">
+                <input name="aapl" value="{aapl}" placeholder="Apple shares">
+                <input name="msft" value="{msft}" placeholder="Microsoft shares">
 
-<button>Calculate</button>
-</form>
+                <div class="section-label">Goal</div>
+                <input name="goal" value="{goal_val}" placeholder="Goal €">
+
+                <button type="submit">Calculate Portfolio</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="summary-header">
+                <h2 class="summary-title">Overview</h2>
+                <div class="pill">Privacy-first</div>
+            </div>
+
+            <div class="result-block">
+                {result}
+            </div>
+
+            <div class="metrics">
+                <div class="metric-card">{health}</div>
+                <div class="metric-card">{projection}</div>
+                <div class="metric-card">{goal}</div>
+                <div class="metric-card">{monthly}</div>
+            </div>
+
+            <div class="metric-card" style="margin-top: 14px;">
+                {daily}
+            </div>
+
+            <div class="insight-wrap">
+                <h3>⚡ Quick Insights</h3>
+                <div class="insights">
+                    {insight}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="feedback">
+        <p>Found something confusing?</p>
+        <a href="mailto:alexbwight@gmail.com?subject=Wealth Dashboard Feedback">
+            Send feedback
+        </a>
+    </div>
+
 </div>
-
-<div class="card">
-{result}
-{health}
-{projection}
-{goal}
-{monthly}
-{daily}
-
-<h3>⚡ Quick Insights</h3>
-<div class="insights">
-{insight}
-</div>
-</div>
-
-</div>
-
-<div class="feedback">
-    <p>Found something confusing?</p>
-    <a href="mailto:alexbwight@gmail.com?subject=Wealth Dashboard Feedback">
-        Send feedback
-    </a>
-</div>
-
 </body>
 </html>
 """
