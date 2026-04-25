@@ -6,6 +6,14 @@ import math
 
 app = Flask(__name__)
 
+
+def safe_float(value, default=0):
+    try:
+        return float(value)
+    except:
+        return default
+
+
 @app.route("/", methods=["GET", "POST"])
 def home():
     result = ""
@@ -28,13 +36,12 @@ def home():
     aapl_percent = msft_percent = 0
 
     if request.method == "POST":
-        # INPUT
-        btc_amount = float(request.form.get("btc") or 0)
-        eth_amount = float(request.form.get("eth") or 0)
-        vwce_amount = float(request.form.get("vwce") or 0)
-        aapl_amount = float(request.form.get("aapl") or 0)
-        msft_amount = float(request.form.get("msft") or 0)
-        goal_amount = float(request.form.get("goal") or 100000)
+        btc_amount = safe_float(request.form.get("btc") or 0)
+        eth_amount = safe_float(request.form.get("eth") or 0)
+        vwce_amount = safe_float(request.form.get("vwce") or 0)
+        aapl_amount = safe_float(request.form.get("aapl") or 0)
+        msft_amount = safe_float(request.form.get("msft") or 0)
+        goal_amount = safe_float(request.form.get("goal") or 100000, 100000)
 
         # CRYPTO PRICES
         try:
@@ -43,8 +50,8 @@ def home():
                 timeout=5
             ).json()
 
-            btc_price = data.get("bitcoin", {}).get("eur", 60000)
-            eth_price = data.get("ethereum", {}).get("eur", 2000)
+            btc_price = data.get("bitcoin", {}).get("eur") or 60000
+            eth_price = data.get("ethereum", {}).get("eur") or 2000
         except:
             btc_price = 60000
             eth_price = 2000
@@ -193,7 +200,6 @@ def home():
             aapl_amount, msft_amount, goal_amount
         ))
 
-        # SAVE COOKIES
         for k, v in {
             "btc": btc_amount,
             "eth": eth_amount,
@@ -219,34 +225,64 @@ def render_page(result, insight,
     health, projection, goal, monthly, daily,
     btc, eth, vwce, aapl, msft, goal_val):
 
-    if result:
-        metrics_html = f"""
-            <div class="quick-stats">
-                <div class="stat-card">{health}</div>
-                <div class="stat-card">{projection}</div>
-                <div class="stat-card">{goal}</div>
-                <div class="stat-card">{monthly}</div>
+    has_results = bool(result.strip())
+
+    if has_results:
+        overview_content = f"""
+        <div class="overview-grid">
+            <div class="main-panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Portfolio Snapshot</p>
+                        <h2>Overview</h2>
+                    </div>
+                    <span class="status-pill">Live prices</span>
+                </div>
+
+                <div class="result-card">
+                    {result}
+                </div>
             </div>
 
-            <div class="wide-card">
+            <div class="metrics-grid">
+                <div class="metric-card">{health}</div>
+                <div class="metric-card">{projection}</div>
+                <div class="metric-card">{goal}</div>
+                <div class="metric-card">{monthly}</div>
+            </div>
+
+            <div class="wide-metric">
                 {daily}
             </div>
 
-            <div class="insights-card">
-                <h3>⚡ Quick Insights</h3>
+            <div class="insights-panel">
+                <div class="panel-header">
+                    <div>
+                        <p class="eyebrow">Personalized</p>
+                        <h2>Quick Insights</h2>
+                    </div>
+                </div>
                 <div class="insights">
                     {insight}
                 </div>
             </div>
+        </div>
         """
     else:
-        result = """
-            <div class="empty-state">
-                <h2>Your overview will appear here</h2>
-                <p>Enter your assets on the left and calculate your portfolio.</p>
+        overview_content = """
+        <div class="empty-state">
+            <div class="empty-icon">📊</div>
+            <h2>Your dashboard is ready</h2>
+            <p>
+                Enter your holdings on the left to calculate portfolio value,
+                health score, projections, goal progress, and quick insights.
+            </p>
+            <div class="example-box">
+                Try: <strong>0.01 BTC</strong>, <strong>0.5 ETH</strong>,
+                <strong>10 VWCE</strong>, <strong>1 Apple</strong>, <strong>1 Microsoft</strong>
             </div>
+        </div>
         """
-        metrics_html = ""
 
     return f"""
 <html>
@@ -261,17 +297,34 @@ def render_page(result, insight,
     box-sizing: border-box;
 }}
 
+:root {{
+    --bg-main: #060b16;
+    --bg-card: rgba(15, 23, 42, 0.78);
+    --bg-card-soft: rgba(255, 255, 255, 0.035);
+    --border: rgba(148, 163, 184, 0.16);
+    --border-soft: rgba(148, 163, 184, 0.10);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --muted-2: #64748b;
+    --green: #22c55e;
+    --green-soft: rgba(34, 197, 94, 0.12);
+    --blue: #60a5fa;
+    --blue-soft: rgba(96, 165, 250, 0.12);
+    --purple: #c084fc;
+    --shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+}}
+
 body {{
     margin: 0;
-    font-family: 'Inter', Arial, sans-serif;
-    color: #f8fafc;
-    background:
-        radial-gradient(circle at top left, rgba(34,197,94,0.12), transparent 28%),
-        radial-gradient(circle at top right, rgba(59,130,246,0.12), transparent 25%),
-        radial-gradient(circle at bottom center, rgba(168,85,247,0.10), transparent 30%),
-        linear-gradient(180deg, #07111f 0%, #0b1220 100%);
     min-height: 100vh;
-    padding: 28px 16px 48px;
+    font-family: 'Inter', Arial, sans-serif;
+    color: var(--text);
+    background:
+        radial-gradient(circle at 10% 0%, rgba(34,197,94,0.16), transparent 28%),
+        radial-gradient(circle at 90% 0%, rgba(96,165,250,0.15), transparent 30%),
+        radial-gradient(circle at 50% 100%, rgba(192,132,252,0.12), transparent 34%),
+        linear-gradient(180deg, #050914 0%, #0f172a 100%);
+    padding: 28px 18px 50px;
 }}
 
 .page {{
@@ -279,197 +332,227 @@ body {{
     margin: 0 auto;
 }}
 
-.topbar {{
+.nav {{
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 26px;
     flex-wrap: wrap;
 }}
 
 .brand {{
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 13px;
 }}
 
 .logo {{
-    width: 46px;
-    height: 46px;
-    border-radius: 14px;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 22px;
-    background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
-    box-shadow: 0 12px 24px rgba(34,197,94,0.25);
+    font-size: 23px;
+    background: linear-gradient(135deg, #22c55e, #14b8a6);
+    box-shadow: 0 16px 34px rgba(34,197,94,0.25);
 }}
 
-.brand-text {{
-    text-align: left;
-}}
-
-.brand-text h1 {{
+.brand h1 {{
     margin: 0;
-    font-size: 30px;
+    font-size: 26px;
     font-weight: 800;
     letter-spacing: -0.04em;
 }}
 
-.brand-text p {{
+.brand p {{
     margin: 4px 0 0;
-    color: #94a3b8;
-    font-size: 14px;
-}}
-
-.top-pill {{
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(148,163,184,0.14);
-    color: #dbeafe;
-    padding: 10px 14px;
-    border-radius: 999px;
+    color: var(--muted);
     font-size: 13px;
 }}
 
+.nav-actions {{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}}
+
+.nav-pill {{
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.045);
+    color: #dbeafe;
+    border-radius: 999px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+}}
+
 .hero {{
-    margin-bottom: 22px;
+    margin-bottom: 24px;
 }}
 
 .hero-card {{
-    background: linear-gradient(135deg, rgba(15,23,42,0.82) 0%, rgba(30,41,59,0.72) 100%);
-    border: 1px solid rgba(148,163,184,0.16);
-    border-radius: 26px;
-    padding: 26px;
-    box-shadow:
-        0 24px 60px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    position: relative;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background:
+        linear-gradient(135deg, rgba(15,23,42,0.90), rgba(30,41,59,0.72)),
+        radial-gradient(circle at top right, rgba(34,197,94,0.12), transparent 32%);
+    border-radius: 30px;
+    padding: 34px;
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
+}}
+
+.hero-card::after {{
+    content: "";
+    position: absolute;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    right: -90px;
+    top: -90px;
+    background: radial-gradient(circle, rgba(96,165,250,0.16), transparent 65%);
+}}
+
+.hero-content {{
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+}}
+
+.hero-kicker {{
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding: 9px 13px;
+    border-radius: 999px;
+    border: 1px solid rgba(34,197,94,0.26);
+    background: rgba(34,197,94,0.10);
+    color: #bbf7d0;
+    font-size: 13px;
+    font-weight: 700;
 }}
 
 .hero-title {{
     margin: 0;
-    font-size: 34px;
+    font-size: 44px;
+    line-height: 1.03;
     font-weight: 800;
-    letter-spacing: -0.04em;
-    line-height: 1.1;
+    letter-spacing: -0.055em;
 }}
 
-.hero-gradient {{
-    background: linear-gradient(135deg, #86efac 0%, #60a5fa 55%, #c084fc 100%);
+.gradient-text {{
+    background: linear-gradient(135deg, #86efac 0%, #60a5fa 52%, #c084fc 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
-    background-clip: text;
 }}
 
 .hero-subtitle {{
-    margin: 12px 0 0;
-    color: #94a3b8;
-    font-size: 15px;
-    line-height: 1.6;
-    max-width: 720px;
-}}
-
-.hero-row {{
-    display: flex;
-    gap: 12px;
-    flex-wrap: wrap;
-    margin-top: 18px;
-}}
-
-.hero-chip {{
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(148,163,184,0.12);
-    border-radius: 999px;
-    padding: 10px 14px;
+    max-width: 680px;
+    margin: 16px 0 0;
     color: #cbd5e1;
+    font-size: 16px;
+    line-height: 1.7;
+}}
+
+.hero-features {{
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 22px;
+}}
+
+.feature-chip {{
+    border: 1px solid var(--border-soft);
+    background: rgba(255,255,255,0.045);
+    color: #dbeafe;
+    border-radius: 999px;
+    padding: 10px 13px;
     font-size: 13px;
+    font-weight: 600;
 }}
 
 .layout {{
     display: grid;
-    grid-template-columns: 360px 1fr;
+    grid-template-columns: 360px minmax(0, 1fr);
     gap: 22px;
     align-items: start;
 }}
 
 .card {{
-    background: rgba(15, 23, 42, 0.74);
-    border: 1px solid rgba(148,163,184,0.16);
-    border-radius: 24px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 26px;
     padding: 24px;
-    box-shadow:
-        0 24px 60px rgba(0,0,0,0.35),
-        inset 0 1px 0 rgba(255,255,255,0.05);
-    backdrop-filter: blur(14px);
-    -webkit-backdrop-filter: blur(14px);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(18px);
+    -webkit-backdrop-filter: blur(18px);
 }}
 
-.section-title {{
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin: 0 0 14px;
-    font-size: 20px;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+.input-card {{
+    position: sticky;
+    top: 18px;
 }}
 
-.section-badge {{
-    display: inline-block;
+.card-label {{
+    display: inline-flex;
     margin-bottom: 14px;
-    background: rgba(34,197,94,0.10);
-    border: 1px solid rgba(34,197,94,0.25);
-    color: #bbf7d0;
     padding: 8px 12px;
     border-radius: 999px;
+    background: var(--blue-soft);
+    border: 1px solid rgba(96,165,250,0.25);
+    color: #bfdbfe;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
+}}
+
+.card-title {{
+    margin: 0 0 14px;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.035em;
 }}
 
 .help {{
-    color: #94a3b8;
+    color: var(--muted);
     font-size: 14px;
     line-height: 1.6;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(148,163,184,0.10);
+    background: rgba(255,255,255,0.035);
+    border: 1px solid var(--border-soft);
     padding: 14px;
     border-radius: 18px;
-    margin: 0 0 18px;
-    text-align: left;
+    margin-bottom: 18px;
 }}
 
-.form-group {{
+.form-section {{
     margin-top: 18px;
 }}
 
-.group-label {{
+.form-section-title {{
     display: flex;
     align-items: center;
     gap: 8px;
-    text-align: left;
     color: #e2e8f0;
-    font-weight: 700;
     font-size: 14px;
-    margin-bottom: 10px;
-    letter-spacing: 0.01em;
+    font-weight: 800;
+    margin-bottom: 9px;
 }}
 
 input {{
     width: 100%;
-    margin: 7px 0;
+    margin: 6px 0;
     padding: 14px 15px;
     border-radius: 16px;
-    border: 1px solid rgba(148,163,184,0.16);
-    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(148,163,184,0.18);
+    background: rgba(255,255,255,0.045);
     color: white;
     font-size: 14px;
     outline: none;
-    transition: all 0.2s ease;
+    transition: 0.18s ease;
 }}
 
 input::placeholder {{
@@ -477,222 +560,289 @@ input::placeholder {{
 }}
 
 input:focus {{
-    border-color: rgba(96,165,250,0.75);
-    box-shadow: 0 0 0 4px rgba(96,165,250,0.12);
-    background: rgba(255,255,255,0.06);
+    border-color: rgba(96,165,250,0.8);
+    box-shadow: 0 0 0 4px rgba(96,165,250,0.13);
+    background: rgba(255,255,255,0.065);
 }}
 
 button {{
     width: 100%;
-    margin-top: 16px;
+    margin-top: 18px;
     padding: 15px 18px;
     border: none;
-    border-radius: 16px;
+    border-radius: 17px;
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     color: white;
     font-weight: 800;
     font-size: 15px;
     cursor: pointer;
-    box-shadow: 0 14px 28px rgba(34,197,94,0.24);
-    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+    box-shadow: 0 18px 36px rgba(34,197,94,0.24);
+    transition: 0.16s ease;
 }}
 
 button:hover {{
     transform: translateY(-1px);
-    box-shadow: 0 18px 34px rgba(34,197,94,0.30);
+    box-shadow: 0 22px 42px rgba(34,197,94,0.30);
 }}
 
-button:active {{
-    transform: translateY(0);
+.example-note {{
+    color: var(--muted-2);
+    font-size: 12px;
+    line-height: 1.5;
+    margin-top: 14px;
 }}
 
-.overview-header {{
+.dashboard-card {{
+    min-height: 520px;
+}}
+
+.overview-grid {{
+    display: grid;
+    gap: 16px;
+}}
+
+.panel-header {{
     display: flex;
     justify-content: space-between;
-    align-items: center;
     gap: 14px;
-    flex-wrap: wrap;
-    margin-bottom: 16px;
+    align-items: center;
+    margin-bottom: 14px;
 }}
 
-.overview-title {{
+.eyebrow {{
+    margin: 0 0 5px;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}}
+
+.panel-header h2 {{
     margin: 0;
     font-size: 24px;
     font-weight: 800;
-    letter-spacing: -0.03em;
-}}
-
-.overview-pill {{
-    background: rgba(96,165,250,0.10);
-    border: 1px solid rgba(96,165,250,0.24);
-    color: #bfdbfe;
-    padding: 8px 12px;
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 600;
-}}
-
-.result-wrap {{
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(148,163,184,0.10);
-    border-radius: 18px;
-    padding: 18px;
-    text-align: left;
-}}
-
-.result-wrap h2 {{
-    margin: 0 0 12px;
-    font-size: 32px;
     letter-spacing: -0.04em;
 }}
 
-.result-wrap h3 {{
+.status-pill {{
+    border-radius: 999px;
+    padding: 8px 12px;
+    color: #bbf7d0;
+    background: var(--green-soft);
+    border: 1px solid rgba(34,197,94,0.25);
+    font-size: 12px;
+    font-weight: 800;
+    white-space: nowrap;
+}}
+
+.result-card,
+.metric-card,
+.wide-metric,
+.insights-panel {{
+    background: var(--bg-card-soft);
+    border: 1px solid var(--border-soft);
+    border-radius: 20px;
+    padding: 18px;
+}}
+
+.result-card {{
+    text-align: left;
+}}
+
+.result-card h2 {{
+    margin: 0 0 10px;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.055em;
+}}
+
+.result-card h3 {{
     margin: 18px 0 8px;
     color: #cbd5e1;
     font-size: 14px;
 }}
 
-.quick-stats {{
+.metrics-grid {{
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px;
-    margin-top: 16px;
 }}
 
-.stat-card {{
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(148,163,184,0.10);
-    border-radius: 18px;
-    padding: 16px;
+.metric-card {{
     text-align: left;
 }}
 
-.stat-card h3 {{
+.metric-card h3,
+.wide-metric h3 {{
     margin: 0 0 10px;
     color: #cbd5e1;
     font-size: 14px;
 }}
 
-.stat-card div {{
+.metric-card div,
+.wide-metric div {{
     line-height: 1.7;
 }}
 
-.wide-card {{
-    margin-top: 14px;
-    background: rgba(255,255,255,0.03);
-    border: 1px solid rgba(148,163,184,0.10);
-    border-radius: 18px;
-    padding: 16px;
+.wide-metric {{
     text-align: left;
 }}
 
-.insights-card {{
-    margin-top: 16px;
-    background: linear-gradient(135deg, rgba(34,197,94,0.06) 0%, rgba(59,130,246,0.05) 100%);
-    border: 1px solid rgba(148,163,184,0.12);
-    border-radius: 20px;
-    padding: 18px;
-    text-align: left;
-}}
-
-.insights-card h3 {{
-    margin: 0 0 12px;
-    font-size: 16px;
+.insights-panel {{
+    background:
+        linear-gradient(135deg, rgba(34,197,94,0.07), rgba(96,165,250,0.05)),
+        rgba(255,255,255,0.03);
 }}
 
 .insights {{
-    line-height: 1.8;
     color: #e2e8f0;
+    line-height: 1.8;
+    text-align: left;
 }}
 
 .empty-state {{
+    min-height: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
     text-align: center;
-    color: #94a3b8;
-    padding: 40px 10px;
+    color: #cbd5e1;
+    padding: 30px;
+}}
+
+.empty-icon {{
+    width: 74px;
+    height: 74px;
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 34px;
+    background: rgba(34,197,94,0.10);
+    border: 1px solid rgba(34,197,94,0.20);
+    margin-bottom: 18px;
 }}
 
 .empty-state h2 {{
-    color: #f8fafc;
-    font-size: 24px;
+    margin: 0 0 10px;
+    font-size: 28px;
+    letter-spacing: -0.04em;
+}}
+
+.empty-state p {{
+    max-width: 460px;
+    color: var(--muted);
+    line-height: 1.7;
+}}
+
+.example-box {{
+    margin-top: 14px;
+    padding: 13px 15px;
+    border-radius: 16px;
+    border: 1px solid var(--border-soft);
+    background: rgba(255,255,255,0.04);
+    color: #dbeafe;
+    font-size: 13px;
 }}
 
 .feedback {{
+    margin-top: 28px;
     text-align: center;
-    margin-top: 24px;
-    color: #94a3b8;
+    color: var(--muted);
     font-size: 14px;
 }}
 
 .feedback a {{
-    display: inline-block;
+    display: inline-flex;
     margin-top: 8px;
     color: #86efac;
     text-decoration: none;
-    font-weight: 700;
+    font-weight: 800;
 }}
 
 .feedback a:hover {{
     text-decoration: underline;
 }}
 
-.footer-note {{
-    margin-top: 10px;
+.disclaimer {{
+    margin-top: 14px;
+    color: var(--muted-2);
     font-size: 12px;
-    color: #64748b;
 }}
 
-@media (max-width: 940px) {{
+@media (max-width: 980px) {{
     .layout {{
         grid-template-columns: 1fr;
     }}
 
+    .input-card {{
+        position: static;
+    }}
+
     .hero-title {{
-        font-size: 30px;
+        font-size: 36px;
     }}
 }}
 
 @media (max-width: 640px) {{
     body {{
-        padding: 20px 12px 36px;
+        padding: 18px 12px 36px;
     }}
 
-    .topbar {{
-        margin-bottom: 18px;
+    .brand h1 {{
+        font-size: 22px;
     }}
 
-    .brand-text h1 {{
-        font-size: 26px;
+    .logo {{
+        width: 42px;
+        height: 42px;
+    }}
+
+    .nav-actions {{
+        width: 100%;
+    }}
+
+    .nav-pill {{
+        width: 100%;
+        text-align: center;
     }}
 
     .hero-card {{
-        padding: 20px;
-        border-radius: 20px;
+        padding: 22px;
+        border-radius: 24px;
     }}
 
     .hero-title {{
-        font-size: 26px;
+        font-size: 29px;
     }}
 
     .hero-subtitle {{
         font-size: 14px;
     }}
 
-    .hero-chip {{
+    .feature-chip {{
         width: 100%;
         text-align: center;
     }}
 
     .card {{
         padding: 18px;
-        border-radius: 20px;
+        border-radius: 22px;
     }}
 
-    .quick-stats {{
+    .metrics-grid {{
         grid-template-columns: 1fr;
     }}
 
-    .result-wrap h2 {{
-        font-size: 28px;
+    .result-card h2 {{
+        font-size: 29px;
+    }}
+
+    .panel-header {{
+        align-items: flex-start;
+        flex-direction: column;
     }}
 }}
 </style>
@@ -701,96 +851,101 @@ button:active {{
 <body>
 <div class="page">
 
-    <div class="topbar">
+    <div class="nav">
         <div class="brand">
             <div class="logo">📈</div>
-            <div class="brand-text">
+            <div>
                 <h1>Wealth Dashboard</h1>
-                <p>Simple. Private. Beginner-friendly.</p>
+                <p>Simple portfolio intelligence</p>
             </div>
         </div>
-        <div class="top-pill">🔒 No login • No account linking</div>
+
+        <div class="nav-actions">
+            <div class="nav-pill">🔒 No login</div>
+            <div class="nav-pill">⚡ Quick insights</div>
+        </div>
     </div>
 
-    <div class="hero">
+    <section class="hero">
         <div class="hero-card">
-            <h2 class="hero-title">
-                Track your wealth with a
-                <span class="hero-gradient">cleaner, smarter overview</span>
-            </h2>
-            <p class="hero-subtitle">
-                Get a fast snapshot of your crypto and stock holdings, portfolio health,
-                future projection, and quick insights — without connecting accounts.
-            </p>
+            <div class="hero-content">
+                <div class="hero-kicker">Privacy-first wealth tracking</div>
 
-            <div class="hero-row">
-                <div class="hero-chip">⚡ Quick insights</div>
-                <div class="hero-chip">📈 Future projection</div>
-                <div class="hero-chip">🎯 Goal tracking</div>
-                <div class="hero-chip">💸 Monthly investing estimate</div>
+                <h2 class="hero-title">
+                    A cleaner way to understand your
+                    <span class="gradient-text">crypto, stocks, and future wealth.</span>
+                </h2>
+
+                <p class="hero-subtitle">
+                    Enter your holdings manually and get instant portfolio value,
+                    health score, goal progress, future projections, and simple insights —
+                    without connecting your broker or exchange.
+                </p>
+
+                <div class="hero-features">
+                    <div class="feature-chip">📊 Portfolio health</div>
+                    <div class="feature-chip">📈 Future projection</div>
+                    <div class="feature-chip">🎯 Goal tracker</div>
+                    <div class="feature-chip">💸 Monthly investing estimate</div>
+                </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="layout">
+    <main class="layout">
 
-        <div class="card">
-            <div class="section-badge">Portfolio Input</div>
-            <h2 class="section-title">🧾 Enter your assets</h2>
+        <aside class="card input-card">
+            <div class="card-label">Input</div>
+            <h2 class="card-title">Add your holdings</h2>
 
             <div class="help">
-                Enter the amount of each asset you own, not the euro value.<br>
+                Enter the amount of each asset you own, not the euro value.
+                <br><br>
                 Example: <strong>0.01 BTC</strong>, <strong>0.5 ETH</strong>,
                 <strong>10 VWCE</strong>, <strong>1 Apple</strong>, <strong>1 Microsoft</strong>.
             </div>
 
             <form method="POST">
-                <div class="form-group">
-                    <div class="group-label">₿ Crypto</div>
+                <div class="form-section">
+                    <div class="form-section-title">₿ Crypto</div>
                     <input name="btc" value="{btc}" placeholder="BTC amount">
                     <input name="eth" value="{eth}" placeholder="ETH amount">
                 </div>
 
-                <div class="form-group">
-                    <div class="group-label">📊 Stocks / ETFs</div>
+                <div class="form-section">
+                    <div class="form-section-title">📊 Stocks & ETFs</div>
                     <input name="vwce" value="{vwce}" placeholder="VWCE shares">
                     <input name="aapl" value="{aapl}" placeholder="Apple shares">
                     <input name="msft" value="{msft}" placeholder="Microsoft shares">
                 </div>
 
-                <div class="form-group">
-                    <div class="group-label">🎯 Goal</div>
+                <div class="form-section">
+                    <div class="form-section-title">🎯 Target</div>
                     <input name="goal" value="{goal_val}" placeholder="Goal €">
                 </div>
 
-                <button type="submit">Calculate Portfolio</button>
+                <button type="submit">Calculate Dashboard</button>
             </form>
 
-            <div class="footer-note">
-                Example: 0.01 BTC, 0.5 ETH, 10 VWCE, 1 Apple, 1 Microsoft
+            <div class="example-note">
+                Your values are saved in your browser cookies for convenience.
             </div>
-        </div>
+        </aside>
 
-        <div class="card">
-            <div class="overview-header">
-                <h2 class="overview-title">Portfolio Overview</h2>
-                <div class="overview-pill">Live market pricing</div>
-            </div>
+        <section class="card dashboard-card">
+            {overview_content}
+        </section>
 
-            <div class="result-wrap">
-                {result}
-            </div>
-
-            {metrics_html}
-        </div>
-
-    </div>
+    </main>
 
     <div class="feedback">
-        <p>Found something confusing or missing?</p>
+        <p>Found something confusing, useless, or missing?</p>
         <a href="mailto:alexbwight@gmail.com?subject=Wealth Dashboard Feedback">
             Send feedback
         </a>
+        <div class="disclaimer">
+            Educational tool only. Estimates are not financial advice.
+        </div>
     </div>
 
 </div>
