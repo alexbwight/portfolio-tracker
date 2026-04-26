@@ -940,8 +940,8 @@ button:hover {{
 
     <div class="feedback">
         <p>Found something confusing, useless, or missing?</p>
-        <a href="mailto:alexbwight@gmail.com?subject=Wealth Dashboard Feedback">
-            Send feedback
+        <a href="https://buildpulse-y2h5.onrender.com/p/wealth-dashboard-65aac1" target="_blank" rel="noopener noreferrer">
+            Leave feedback
         </a>
         <div class="disclaimer">
             Educational tool only. Estimates are not financial advice.
