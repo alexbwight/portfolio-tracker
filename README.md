@@ -6,6 +6,16 @@ A simple, privacy-first wealth dashboard for quick portfolio insights.
 
 https://portfolio-tracker-vqap.onrender.com
 
+## Screenshots
+
+### Dashboard
+
+![Wealth Dashboard](screenshots/wealth-dashboard.png)
+
+### Results View
+
+![Wealth Dashboard Results](screenshots/wealth-dashboard-results.png)
+
 ## Feedback
 
 Feedback is collected through my second project, BuildPulse:
